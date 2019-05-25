@@ -1,10 +1,12 @@
+"use strict"
+
 /********Oauth - Distributor Authentication Script  using Abovegem page  *********/
 (function() {
     // Localize jQuery variable
-    var jQuery;
+    let jQuery;
     /******** Load jQuery if not present *********/
     if (window.jQuery === undefined || window.jQuery.fn.jquery !== '3.0.0') {
-        var script_tag = document.createElement('script');
+        let script_tag = document.createElement('script');
         script_tag.setAttribute("type", "text/javascript");
         script_tag.setAttribute("src", "https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.min.js");
         if (script_tag.readyState) {
@@ -43,7 +45,7 @@
         //initialize with document ready function
         jQuery(document).ready(function($) {
             showMessage("document", "ready");
-            var auth_token = null;
+            let auth_token = null;
             // JavaScript code to GET and SET cookies :: END
             showMessage("pageLoad()", "call");
             // calling code on load to check user code got token or not
@@ -52,8 +54,8 @@
             // obtaining user action and checking (is user valid?)
             $('a').click(function(event) {
                 //getting current clicked anchor
-                var $elem = $(this);
-                var controlVerified = verifyControl($elem);
+                let $elem = $(this);
+                let controlVerified = verifyControl($elem);
                 // if class exists
                 if (controlVerified === true) {
                     //preventing default action on specific anchor tab click
@@ -63,7 +65,7 @@
             });
 
             function verifyControl($elem) {
-                var controlVerified = false;
+                let controlVerified = false;
                 // comparing with current element classes
                 if (typeof constants.attainableCls !== 'undefined' && constants.attainableCls !== null && constants.attainableCls.length > 0) {
                     $.each(constants.attainableCls, function(index, attainableCl) {
@@ -101,7 +103,7 @@
                     auth_token = cookie.get(constants.access_token_text);
                 }
                 //saving clicked url in cookie and sending request to validate user
-                var initial_url = pageUrl;
+                let initial_url = pageUrl;
                 if (typeof auth_token === 'undefined' || auth_token === null || auth_token.trim().length === 0) {
                     cookie.set(constants.access_page, initial_url);
                     window.open(constants.oga_login_page, constants.parent);
@@ -118,9 +120,9 @@
             // function to check user got token or not
             function pageLoad() {
                 showMessage("page_Load", "inital");
-                var auth_action_string = queryString.auth_action();
+                let auth_action_string = queryString.auth_action();
                 showMessage("page_Load", "auth_action_string::" + auth_action_string);
-                var auth_code = queryString.code();
+                let auth_code = queryString.code();
                 showMessage("page_Load", "auth_code::" + auth_code);
                 // Comparing user auth token
                 if (typeof auth_action_string !== 'undefined' && auth_action_string !== null && parseInt(auth_action_string) === 0) {
@@ -139,7 +141,7 @@
                     /***************** LIVE CODE ::ENDS ****************/
                 } else {
                     // getting current page url and comparing with anchor tag that contains same class
-                    var href = window.location.href;
+                    let href = window.location.href;
                     // The first argument is the index, the second is the element
                     $('a').each(function(index, element) {
                         if ($(element).attr(constants.href) == href) {
@@ -156,10 +158,10 @@
             function temporaryAuth(callback) {
                 showMessage("temporaryAuth", "initial");
                 /*************** TEMP CODE :: STARTS ***************/
-                var token_type = constants.bearer;
-                var access_token = basics.Guid();
-                var expires_in = constants.expires_in_number;
-                var refresh_token = basics.Guid();
+                let token_type = constants.bearer;
+                let access_token = basics.Guid();
+                let expires_in = constants.expires_in_number;
+                let refresh_token = basics.Guid();
                 showMessage("temporaryAuth", "after");
                 callback(token_type, access_token, expires_in, refresh_token);
                 /*************** TEMP CODE :: ENDS ***************/
@@ -167,10 +169,10 @@
 
             function addUserToken(callback) {
                 //Getting data from Query String
-                var token_type = queryString.token_type();
-                var access_token = queryString.access_token();
-                var expires_in = queryString.expires_in();
-                var refresh_token = queryString.refresh_token();
+                let token_type = queryString.token_type();
+                let access_token = queryString.access_token();
+                let expires_in = queryString.expires_in();
+                let refresh_token = queryString.refresh_token();
                 callback(token_type, access_token, expires_in, refresh_token);
             }
 
@@ -201,7 +203,7 @@
                 basics.removeQueryString();
                 //Getting page cookie from where user came before redirecting to login page
                 showMessage("updateUserToken", "getAccess::before");
-                var accessPage = cookie.get(constants.access_page);
+                let accessPage = cookie.get(constants.access_page);
                 showMessage("updateUserToken", "getAccess::after");
                 showMessage(accessPage);
                 if (accessPage !== null && accessPage.trim().length !== 0) {
@@ -215,7 +217,7 @@
             }
 
             function updateUserStatus() {
-                var logged = false;
+                let logged = false;
                 //Get and check user cookies exist or not
                 auth_token = cookie.get(constants.access_token_text);
                 if (typeof auth_token != 'undefined' && auth_token != null && auth_token.trim().length > 0) {
@@ -226,15 +228,15 @@
                 $('ul.social-menu').find('li.list-current-status').remove();
 
                 // Add li.list-current-status with user status
-                var listTag = document.createElement('li');
+                let listTag = document.createElement('li');
                 listTag.setAttribute('class', 'menu-item menu-item-type-custom menu-item-object-custom list-current-status');
 
                 // Add Login and Logout button to take desired action
-                var actionButton = document.createElement('a');
+                let actionButton = document.createElement('a');
                 actionButton.setAttribute('class', 'og-user-status');
                 actionButton.setAttribute('href', '');
                 // If user is log
-                actionButton.innerText = logged == true ? 'LOG OUT' : 'LOG IN';
+                actionButton.innerText = basics.LogText(logged);
                 listTag.appendChild(actionButton);
                 $('header').find('ul#menu-top-header').append(listTag);
                 $('header').find('ul#menu-top-header-spanishus').append(listTag);
@@ -249,7 +251,7 @@
 
                 $('a.og-user-status').on('click', function(event) {
                     event.preventDefault();
-                    var auth_token = cookie.get(constants.access_token_text);
+                    let auth_token = cookie.get(constants.access_token_text);
                     if (typeof auth_token === 'undefined' || auth_token === null || auth_token.trim().length === 0) {
                         checkUserValidation(0, window.location.href, constants.parent);
                     } else {
@@ -315,10 +317,12 @@ const constants = {
     // constant value of
     bearer = "bearer",
     // constant value of
-    expires_in_number: 2533343
+    expires_in_number: 2533343,
+    logout: "LOG OUT",
+    login: "LOG IN"
 };
 
-var queryString = {
+let queryString = {
     // value from queryString of
     token_type: () => basics.getQueryString(constants.token_type),
     // value from queryString of
@@ -333,21 +337,21 @@ var queryString = {
     code: () => basics.GetQueryString(constants.code)
 };
 
-var basics = {
+let basics = {
     // base URL of current page/form
     getBaseUrl: function() {
-        var pathArray = location.href.split('/');
-        var protocol = pathArray[0];
-        var host = pathArray[2];
-        var url = protocol + '//' + host;
+        let pathArray = location.href.split('/');
+        let protocol = pathArray[0];
+        let host = pathArray[2];
+        let url = protocol + '//' + host;
         return url;
     },
     // Getting query string value by key name
     getQueryString: function(name) {
-        var vars = [],
+        let vars = [],
             hash;
-        var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
-        for (var i = 0; i < hashes.length; i++) {
+        let hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+        for (let i = 0; i < hashes.length; i++) {
             hash = hashes[i].split('=');
             vars.push(hash[0]);
             vars[hash[0]] = hash[1];
@@ -365,13 +369,14 @@ var basics = {
     // Generating GUID from random code
     Guid: function() {
         // then to call it, plus stitch in '4' in the third group
-        var guid = (this.S4() + this.S4() + "-" + this.S4() + "-4" + this.S4().substr(0, 3) + "-" + this.S4() + "-" + this.S4() + this.S4() + this.S4()).toLowerCase();
+        let guid = (this.S4() + this.S4() + "-" + this.S4() + "-4" + this.S4().substr(0, 3) + "-" + this.S4() + "-" + this.S4() + this.S4() + this.S4()).toLowerCase();
         return guid;
-    }
+    },
+    LogText: (logged) => logged ? constants.logout : constants.login,
 };
 
 // Please acknowledge use of this code by including this header.
-var cookie = {
+let cookie = {
     today: new Date(),
     // Cookie expiry period
     expiry: new Date(this.today.getTime() + 30 * 24 * 3600 * 1000), // plus 30 days
@@ -381,17 +386,17 @@ var cookie = {
     set: function(name, value) {
         if (value != null && value.trim().length > 0) {
             // Encode the String
-            var encodedString = value;
+            let encodedString = value;
             document.cookie = name + "=" + escape(encodedString) + "; path=/; expires=" + this.expiry;
         }
     },
     //Getting or retrieving cookies from browser by name
     get: function(name) {
-        var re = new RegExp(name + "=([^;]+)");
-        var encodedString = re.exec(document.cookie);
+        let regex = new RegExp(name + "=([^;]+)");
+        let encodedString = regex.exec(document.cookie);
         // Decode the String
         if (encodedString != null) {
-            var value = encodedString[1];
+            let value = encodedString[1];
             return (value != null) ? unescape(value) : null;
         }
         return "";
