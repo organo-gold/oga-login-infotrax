@@ -8,8 +8,9 @@
         showLoader();
         var ds = $("input[name=idistributor]").val();
         var pw = $("input[name=ipassword]").val();
-        var url = "http://dev-organogold-dts.myvoffice.com/organogoldtst/index.cfm?service=Session.login&apikey=O3962162&DTSPASSWORD=" + pw + "&DTSUSERID=" + ds + "&format=json";
-        url = "http://organogold-dts.myvoffice.com/organogold/index.cfm?service=Session.login&apikey=O3962162&DTSPASSWORD=" + pw + "&DTSUSERID=" + ds + "&format=json";
+        var ak = $("input[name=apiKey]").val();
+        var url = "http://dev-organogold-dts.myvoffice.com/organogoldtst/index.cfm?service=Session.login&apikey=" + ak + "&DTSPASSWORD=" + pw + "&DTSUSERID=" + ds + "&format=json";
+        url = "http://organogold-dts.myvoffice.com/organogold/index.cfm?service=Session.login&apikey=" + ak + "&DTSPASSWORD=" + pw + "&DTSUSERID=" + ds + "&format=json";
         console.log("auth_url: ", url);
         if (validate()) {
             jQuery.support.cors = true;
@@ -17,7 +18,6 @@
                 url: url,
                 type: "GET",
                 dataType: "text",
-                "Content-Type": "application/json",
                 success: function(data, res, req) {
                     console.log("data: ", data);
                     console.log("response: ", res);
@@ -28,7 +28,7 @@
                     var stringified = JSON.stringify(result);
                     var parsedObj = JSON.parse(stringified);
                     if (parsedObj.SESSION !== undefined) {
-                        getUserDetail(parsedObj.SESSION);
+                        getUserDetail(parsedObj.SESSION, ak);
                     } else {
                         if (parsedObj.MESSAGE !== undefined) {
                             showMessage(parsedObj.DETAIL);
@@ -53,10 +53,11 @@
         }
     }
 
-    function getUserDetail(token) {
+    function getUserDetail(token, ak) {
         console.log("token: ", token);
-
-        var url = "http://organogold-dts.myvoffice.com/organogold/index.cfm?jsessionid=" + token + "&service=Genealogy.distInfoBySavedQuery&apikey=O3962162&QRYID=DistConfData&DISTID=1000101&APPNAME=Admin&GROUP=Reports&format=JSON&fwreturnlog=1";
+        var di = $("input[name=distID]").val();
+        var url = "http://organogold-dts.myvoffice.com/organogold/index.cfm?jsessionid=" + token + "&service=Genealogy.distInfoBySavedQuery&apikey=" + ak + "&QRYID=DistConfData&DISTID=" + di + "&APPNAME=Admin&GROUP=Reports&format=JSON&fwreturnlog=1";
+        console.log("getUserDetail(): ", url);
         jQuery.support.cors = true;
         $.ajax({
             url: url,
