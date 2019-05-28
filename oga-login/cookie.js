@@ -1,5 +1,4 @@
 var cookie = {
-    tokenHeader: 'Token',
     dateFormat: 'yyyy-MM-dd hh:mm:ss',
     today: function() {
         return new Date();
