@@ -1,18 +1,29 @@
-﻿$(function() {
+﻿"use strict"
+
+$(function() {
 
     $('body').find('button[type=button]').click(function() {
-        authenticate();
+        authForm.authenticate();
+    });
+    $('body').find('button[type=reset]').click(function() {
+        authForm.formReset();
     });
 
-    function authenticate() {
-        showLoader();
-        var ds = $("input[name=idistributor]").val();
-        var pw = $("input[name=ipassword]").val();
-        var ak = $("input[name=apiKey]").val();
-        var url = "http://dev-organogold-dts.myvoffice.com/organogoldtst/index.cfm?service=Session.login&apikey=" + ak + "&DTSPASSWORD=" + pw + "&DTSUSERID=" + ds + "&format=json";
-        url = "http://organogold-dts.myvoffice.com/organogold/index.cfm?service=Session.login&apikey=" + ak + "&DTSPASSWORD=" + pw + "&DTSUSERID=" + ds + "&format=json";
+    authForm.formSet();
+
+});
+
+let authForm = {
+
+    auth_url: "http://organogold-dts.myvoffice.com/organogold/index.cfm?service=Session.login&apikey=[ak]&DTSPASSWORD=[pw]&DTSUSERID=[ds]&format=json",
+    authenticate: function() {
+        this.showLoader();
+        let ak = cookie.DecodeString(cookie.getCookie(this._ak));
+        let ds = $("input[name=idistributor]").val();
+        let pw = $("input[name=ipassword]").val();
+        let url = this.auth_url.replace("[ak]", ak).replace("[ds]", ds).replace("[pw]", pw);
         console.log("auth_url: ", url);
-        if (validate()) {
+        if (this.validate()) {
             jQuery.support.cors = true;
             $.ajax({
                 url: url,
@@ -23,21 +34,21 @@
                     console.log("response: ", res);
                     console.log("request: ", req);
 
-                    var result = { "SESSION": "aaba56ac-de0c-46b8-8dbc-02ea55f0218c", "LOAD": 1, "ROLES": "distributor" };
+                    let result = { "SESSION": "aaba56ac-de0c-46b8-8dbc-02ea55f0218c", "LOAD": 1, "ROLES": "distributor" };
                     // { "MESSAGE": "Login Error", "DETAIL": "Invalid user", "TIMESTAMP": "05/27/2019 15:18:56", "ERRORCODE": "902" };
-                    var stringified = JSON.stringify(result);
-                    var parsedObj = JSON.parse(stringified);
-                    if (parsedObj.SESSION !== undefined) {
-                        getUserDetail(parsedObj.SESSION, ak);
+                    let stringified = JSON.stringify(result);
+                    let parsedObj = JSON.parse(stringified);
+                    if (parsedObj.SESSION !== undefined && parsedObj.SESSION !== null) {
+                        authForm.getUserDetail(parsedObj.SESSION, ak);
                     } else {
-                        if (parsedObj.MESSAGE !== undefined) {
-                            showMessage(parsedObj.DETAIL);
+                        if (parsedObj.DETAIL !== undefined && parsedObj.DETAIL !== null) {
+                            authForm.showMessage(parsedObj.DETAIL);
                         } else {
-                            showMessage("Invalid User Info");
+                            authForm.showMessage("Invalid User Info");
                         }
                         return;
                     }
-                    hideLoader();
+                    authForm.hideLoader();
                 },
                 error: function(x, y, z) {
                     console.log("Error: ", x, y, z);
@@ -47,44 +58,46 @@
                         return;
                     }
                     $('.div-message').text("Something went wrong. Unable to fetch data.");
-                    hideLoader();
+                    authForm.hideLoader();
                 }
             });
         }
-    }
+    },
 
-    function getUserDetail(token, ak) {
+    user_url: "http://organogold-dts.myvoffice.com/organogold/index.cfm?jsessionid=[token]&service=Genealogy.distInfoBySavedQuery&apikey=[ak]&QRYID=DistConfData&DISTID=[di]&APPNAME=Admin&GROUP=Reports&format=JSON&fwreturnlog=1",
+    getUserDetail: function(token, ak) {
         console.log("token: ", token);
-        var di = $("input[name=distID]").val();
-        var url = "http://organogold-dts.myvoffice.com/organogold/index.cfm?jsessionid=" + token + "&service=Genealogy.distInfoBySavedQuery&apikey=" + ak + "&QRYID=DistConfData&DISTID=" + di + "&APPNAME=Admin&GROUP=Reports&format=JSON&fwreturnlog=1";
+        let di = cookie.DecodeString(cookie.getCookie(this._di));
+        let url = this.user_url.replace("[ak]", ak).replace("[di]", di).replace("[token]", token);
         console.log("getUserDetail(): ", url);
         jQuery.support.cors = true;
         $.ajax({
             url: url,
             type: "GET",
             dataType: "text",
-            "Content-Type": "application/json",
             success: function(data, res, req) {
                 console.log("data: ", data);
                 console.log("response: ", res);
                 console.log("request: ", req);
 
-                var result = { "ROWCOUNT": 1, "COLUMNS": ["NAME", "CITY", "STATE", "CELL_PHONE", "HOME_PHONE", "NAME2", "EMAIL", "STATUS", "END_RANK", "COU"], "DATA": { "NAME": ["ENTERPRISES SRL, SHANE MORAND"], "CITY": ["Santa Ana"], "STATE": ["SJ"], "CELL_PHONE": ["18888453990"], "HOME_PHONE": ["18888453990"], "NAME2": [""], "EMAIL": ["info@shanemorand.com"], "STATUS": ["D"], "END_RANK": ["15"], "COU": ["CAN"] } };
+                let result = { "ROWCOUNT": 1, "COLUMNS": ["NAME", "CITY", "STATE", "CELL_PHONE", "HOME_PHONE", "NAME2", "EMAIL", "STATUS", "END_RANK", "COU"], "DATA": { "NAME": ["ENTERPRISES SRL, SHANE MORAND"], "CITY": ["Santa Ana"], "STATE": ["SJ"], "CELL_PHONE": ["18888453990"], "HOME_PHONE": ["18888453990"], "NAME2": [""], "EMAIL": ["info@shanemorand.com"], "STATUS": ["D"], "END_RANK": ["15"], "COU": ["CAN"] } };
                 // {"MESSAGE":"Validation Error","DETAIL":"Not Authorized to run this service","TIMESTAMP":"05/27/2019 15:49:03","ERRORCODE":"904"}
-                var stringified = JSON.stringify(result);
-                var parsedObj = JSON.parse(stringified);
-                if (parsedObj.COLUMNS !== undefined) {
+                let stringified = JSON.stringify(result);
+                let parsedObj = JSON.parse(stringified);
+                console.log("parsedObj.COLUMNS: ", parsedObj.COLUMNS);
+                if (parsedObj.COLUMNS !== undefined && parsedObj.COLUMNS !== null) {
+                    cookie.setCookie(cookie.tokenHeader, token, cookie.addHours(cookie.today(), 12));
                     // CONTINUE
                     console.log("VALIDATED");
                 } else {
-                    if (parsedObj.DETAIL !== undefined) {
-                        showMessage(parsedObj.DETAIL);
+                    if (parsedObj.DETAIL !== undefined && parsedObj.DETAIL !== null) {
+                        authForm.showMessage(parsedObj.DETAIL);
                     } else {
-                        showMessage("Invalid User Info");
+                        authForm.showMessage("Invalid User Info");
                     }
                     return;
                 }
-                hideLoader();
+                authForm.hideLoader();
             },
             error: function(x, y, z) {
                 console.log("Error: ", x, y, z);
@@ -94,52 +107,70 @@
                     return;
                 }
                 $('.div-message').text("Something went wrong. Unable to fetch data.");
-                hideLoader();
+                authForm.hideLoader();
             }
         });
-    }
+    },
 
-    function showMessage(text) {
-        if (text !== undefined && text !== null) {
-            $("div.message").text(text);
+    showMessage: function(text) {
+        if (text !== undefined && text !== null && text.trim().length > 0) {
+            $("div.message").html(text);
             $("div.message").removeClass("hidden");
+            this.hideLoader();
         } else {
-            $("div.message").text("");
+            $("div.message").html("");
             $("div.message").addClass("hidden");
         }
-    }
+    },
 
-    function validate() {
-        var isvalid = true;
-        var un = $('input[name=idistributor]').val();
-        var pw = $('input[name=ipassword]').val();
+    validate: function() {
+        let msg = "";
+        let isvalid = true;
+        let un = $('input[name=idistributor]').val();
+        let pw = $('input[name=ipassword]').val();
         if (un === null ||
             un === 'undefined' ||
             un.trim().length === 0) {
             isvalid = false;
+            msg += "Distributor ID is required<br/>";
             $('input[name=idistributor]').parent().parent('.form-group').addClass('has-error');
         }
         if (pw === null ||
             pw === 'undefined' ||
             pw.trim().length === 0) {
             isvalid = false;
+            msg += "Password is required<br/>";
             $('input[name=ipassword]').parent().parent('.form-group').addClass('has-error');
         }
-        console.log("validate(): " + isvalid);
+        this.showMessage(msg);
         return isvalid;
-    }
+    },
 
-    function showLoader() {
+    formReset: function() {
+        $('input[name=idistributor]').parent().parent('.form-group').removeClass('has-error');
+        $('input[name=ipassword]').parent().parent('.form-group').removeClass('has-error');
+        this.showMessage();
+    },
+
+    _ak: "_ak__",
+    _di: "_di__",
+
+    formSet: function() {
+        cookie.setCookie(this._ak, cookie.EncodeString("O3962162"), cookie.addHours(cookie.today(), 12));
+        cookie.setCookie(this._di, cookie.EncodeString("1000101"), cookie.addHours(cookie.today(), 12));
+    },
+
+    showLoader: function() {
         $('body').find('button[type=button]').addClass('disabled');
         $('body').find('input[name=idistributor]').addClass('disabled');
         $('body').find('input[name=ipassword]').addClass('disabled');
         $('.loading-results').removeClass("hide");
-    }
+    },
 
-    function hideLoader() {
+    hideLoader: function() {
         $('body').find('button[type=button]').removeClass('disabled');
         $('body').find('input[name=idistributor]').removeClass('disabled');
         $('body').find('input[name=ipassword]').removeClass('disabled');
         $('.loading-results').addClass("hide");
     }
-});
+};
