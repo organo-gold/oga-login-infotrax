@@ -2,17 +2,40 @@
 
 $(function() {
 
-    $('body').find('button[type=button]').click(function() {
-        authForm.authenticate();
-    });
-    $('body').find('button[type=reset]').click(function() {
-        authForm.formReset();
-    });
+    // Localize jQuery variable
+    let jQuery;
+    /******** Load jQuery if not present *********/
+    if (window.jQuery === undefined || window.jQuery.fn.jquery !== "3.0.0") {
+        let script_tag = document.createElement("script");
+        script_tag.setAttribute("type", "text/javascript");
+        script_tag.setAttribute("src", "https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.min.js");
+        if (script_tag.readyState) {
+            script_tag.onreadystatechange = function() { // For old versions of IE
+                if (this.readyState == "complete" || this.readyState == "loaded") {
+                    scriptLoadHandler();
+                }
+            };
+        } else {
+            script_tag.onload = scriptLoadHandler;
+        }
+        // Try to find the head, otherwise default to the documentElement
+        (document.getElementsByTagName("head")[0] || document.documentElement).appendChild(script_tag);
+    } else {
+        // The jQuery version on the window is the one we want to use
+        jQuery = window.jQuery;
 
-    authForm.formSet();
-    authForm.enterPressEvent();
-    authForm.checkAuth();
+        // Call our main function
+        authForm.formSet();
+    }
+    /******** Called once jQuery has loaded ******/
+    function scriptLoadHandler() {
+        // Restore $ and window.jQuery to their previous values and store the
+        // new jQuery in our local jQuery variable
+        jQuery = window.jQuery.noConflict(true);
 
+        // Call our main function
+        authForm.formSet();
+    }
 });
 
 let authForm = {
@@ -58,7 +81,7 @@ let authForm = {
                             if (authForm.checkNotNull(parsedObj.DETAIL)) {
                                 authForm.showMessage(parsedObj.DETAIL);
                             } else {
-                                authForm.showMessage("Invalid User Info");
+                                authForm.showMessage("You are not authorized");
                             }
                             return;
                         }
@@ -191,16 +214,27 @@ let authForm = {
         cookie.deleteCookie(authForm._token)
     },
 
-    _lastActivePage: "_lap__",
+    _lastActivePage: "_xap__",
 
     _homePage: "https://ogacademy.staging.wpengine.com/",
 
     _redirectActivePage: () => cookie.getCookie(authForm._lastActivePage),
 
     formSet: function() {
+
+        $('body').find('button[type=button]').click(function() {
+            authForm.authenticate();
+        });
+        $('body').find('button[type=reset]').click(function() {
+            authForm.formReset();
+        });
+
         cookie.setCookie(authForm._apiKey, cookie.EncodeString("O3962162"), cookie.addHours(cookie.today(), 12));
         cookie.setCookie(authForm._distID, cookie.EncodeString("1000101"), cookie.addHours(cookie.today(), 12));
         //cookie.setCookie(authForm._lastActivePage, authForm._homePage, cookie.addHours(cookie.today(), 12));
+
+        authForm.enterPressEvent();
+        authForm.checkAuth();
     },
 
     showLoader: function() {
