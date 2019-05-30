@@ -1,7 +1,6 @@
 ﻿"use strict"
 
 $(function() {
-
     // Localize jQuery variable
     let jQuery;
     /******** Load jQuery if not present *********/
@@ -43,99 +42,104 @@ let authForm = {
     checkAuth: function() {
         authForm.showLoader();
         let token = authForm.getToken();
-        if (authForm.checkNotNull(token)) {
-            authForm.getUserByToken(token, authForm.ak);
+        if (helper.checkNotNull(token)) {
+            authForm.getUserByToken(token, authForm.api_key);
         }
         authForm.hideLoader();
     },
 
-    auth_url: "http://organogold-dts.myvoffice.com/organogold/index.cfm?service=Session.login&apikey=[ak]&DTSPASSWORD=[pw]&DTSUSERID=[ds]&format=json",
     authenticate: function() {
         authForm.showLoader();
-        let ak = authForm.ak;
-        let ds = $("input[name=idistributor]").val();
-        let pw = $("input[name=ipassword]").val();
-        let url = authForm.auth_url.replace("[ak]", ak).replace("[ds]", ds).replace("[pw]", pw);
-        console.log("auth_url: ", url);
         if (authForm.validate()) {
+            let ak = authForm.api_key;
+            let ds = $("input[name=idistributor]").val();
+            let pw = $("input[name=ipassword]").val();
+            let url = constants.USER_AUTH_URL.replace("[ak]", ak).replace("[ds]", ds).replace("[pw]", pw);
+            console.log("auth_url: ", url);
             jQuery.support.cors = true;
             $.ajax({
                 url: url,
-                type: "GET",
-                dataType: "text",
-                success: function(data, res, req) {
-                    console.log("data: ", data);
-                    console.log("response: ", res);
-                    console.log("request: ", req);
-
-                    let result = { "SESSION": "aaba56ac-de0c-46b8-8dbc-02ea55f0218c", "LOAD": 1, "ROLES": "distributor" };
-                    if (authForm.checkNotNull(result)) {
-                        let stringified = JSON.stringify(result);
+                type: "POST",
+                dataType: "application/json",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                success: function(response) {
+                    console.log("response: ", response);
+                    if (helper.checkNotNull(response)) {
+                        let stringified = JSON.stringify(response);
                         let parsedObj = JSON.parse(stringified);
-                        if (authForm.checkNotNullString(parsedObj.SESSION)) {
+                        if (helper.checkNotNullString(parsedObj.SESSION)) {
                             authForm.setToken(parsedObj.SESSION);
                             authForm.getUserByToken(parsedObj.SESSION, ak);
                         } else {
                             authForm.deleteToken();
                             // { "MESSAGE": "Login Error", "DETAIL": "Invalid user", "TIMESTAMP": "05/27/2019 15:18:56", "ERRORCODE": "902" };
-                            if (authForm.checkNotNull(parsedObj.DETAIL)) {
+                            if (helper.checkNotNull(parsedObj.DETAIL)) {
                                 authForm.showMessage(parsedObj.DETAIL);
                             } else {
-                                authForm.showMessage("You are not authorized");
+                                authForm.showMessage("Authentication failed!");
                             }
                             return;
                         }
                     }
                     authForm.hideLoader();
                 },
-                error: function(x, y, z) {
-                    console.log("Error: ", x, y, z);
-                    if (authForm.checkNotNull(x) && x.status === 401) {
-                        $('.div-message').text("You are not authorized");
+                done: function(response) {
+                    console.log("done: ", response);
+                },
+                success: function(s) {
+                    console.log("success: ", s);
+                },
+                error: function(x, y) {
+                    console.log("Error(x): ", x);
+                    console.log("Error(y): ", y);
+                    if (helper.checkNotNull(x) && x.status === 401) {
+                        authForm.showMessage("You are not authorized");
                     } else {
-                        $('.div-message').text("Something went wrong. Unable to fetch data.");
+                        authForm.showMessage("Something went wrong. Unable to fetch data.");
                     }
                     authForm.hideLoader();
-                }
+                },
             });
         }
     },
 
-    user_url: "http://organogold-dts.myvoffice.com/organogold/index.cfm?jsessionid=[token]&service=Genealogy.distInfoBySavedQuery&apikey=[ak]&QRYID=DistConfData&DISTID=[di]&APPNAME=Admin&GROUP=Reports&format=JSON&fwreturnlog=1",
     getUserByToken: function(token, ak) {
         console.log("token: ", token);
-        let url = authForm.user_url.replace("[ak]", ak).replace("[di]", authForm.di).replace("[token]", token);
+        let url = constants.DETAIL_BY_TOKEN_URL.replace("[ak]", ak).replace("[di]", authForm.dist_id).replace("[token]", token);
         console.log("getUserByToken(): ", url);
         jQuery.support.cors = true;
         $.ajax({
             url: url,
             type: "GET",
-            dataType: "text",
-            success: function(data, res, req) {
-                console.log("data: ", data);
-                console.log("response: ", res);
-                console.log("request: ", req);
-
-                let result = { "ROWCOUNT": 1, "COLUMNS": ["NAME", "CITY", "STATE", "CELL_PHONE", "HOME_PHONE", "NAME2", "EMAIL", "STATUS", "END_RANK", "COU"], "DATA": { "NAME": ["ENTERPRISES SRL, SHANE MORAND"], "CITY": ["Santa Ana"], "STATE": ["SJ"], "CELL_PHONE": ["18888453990"], "HOME_PHONE": ["18888453990"], "NAME2": [""], "EMAIL": ["info@shanemorand.com"], "STATUS": ["D"], "END_RANK": ["15"], "COU": ["CAN"] } };
-                if (authForm.checkNotNull(result)) {
-                    let stringified = JSON.stringify(result);
+            success: function(response) {
+                console.log("response 2: ", response);
+                if (helper.checkNotNull(response)) {
+                    let stringified = JSON.stringify(response);
                     let parsedObj = JSON.parse(stringified);
                     console.log("parsedObj.COLUMNS: ", parsedObj.COLUMNS);
-                    if (authForm.checkNotNull(parsedObj.COLUMNS)) {
+                    if (helper.checkNotNull(parsedObj.COLUMNS)) {
                         // CONTINUE
                         console.log("VALIDATED");
-                        let redirectPage = authForm._redirectActivePage();
-                        if (!authForm.checkNotNullString(redirectPage)) {
-                            redirectPage = authForm._homePage;
+
+                        let redirectPage = helper.getQueryString(constants.CALLBACK);
+                        if (!helper.checkNotNullString(redirectPage)) {
+                            redirectPage = constants.HOME_PAGE;
+                        } else {
+                            redirectPage = authForm.redirectActivePage();
                         }
-                        //window.open(redirectPage, "_parent");
+                        if (!helper.checkNotNullString(redirectPage)) {
+                            redirectPage = constants.HOME_PAGE;
+                        }
+                        window.open(redirectPage, "_parent");
                     } else {
                         authForm.deleteToken();
                         // {"MESSAGE":"Validation Error","DETAIL":"Not Authorized to run this service","TIMESTAMP":"05/27/2019 15:49:03","ERRORCODE":"904"}
-                        if (authForm.checkNotNull(parsedObj.DETAIL)) {
+                        if (helper.checkNotNull(parsedObj.DETAIL)) {
                             authForm.showMessage(parsedObj.DETAIL);
                         } else {
-                            authForm.showMessage("Invalid User Info");
+                            authForm.showMessage("Authentication failed!");
                         }
                         return;
                     }
@@ -144,10 +148,10 @@ let authForm = {
             },
             error: function(x, y, z) {
                 console.log("Error: ", x, y, z);
-                if (authForm.checkNotNull(x) && x.status === 401) {
-                    $('.div-message').text("You are not authorized");
+                if (helper.checkNotNull(x) && x.status === 401) {
+                    authForm.showMessage("You are not authorized");
                 } else {
-                    $('.div-message').text("Something went wrong. Unable to fetch data.");
+                    authForm.showMessage("Something went wrong. Unable to fetch data.");
                 }
                 authForm.hideLoader();
             }
@@ -155,13 +159,13 @@ let authForm = {
     },
 
     showMessage: function(text) {
-        if (authForm.checkNotNull(text)) {
+        if (helper.checkNotNull(text)) {
             $("div.message").html(text);
-            $("div.message").removeClass("hidden");
+            $("div.message").removeClass("hide");
             authForm.hideLoader();
         } else {
             $("div.message").html("");
-            $("div.message").addClass("hidden");
+            $("div.message").addClass("hide");
         }
     },
 
@@ -171,12 +175,12 @@ let authForm = {
         let isvalid = true;
         let un = $('input[name=idistributor]').val();
         let pw = $('input[name=ipassword]').val();
-        if (!authForm.checkNotNullString(un)) {
+        if (!helper.checkNotNullString(un)) {
             isvalid = false;
             msg += "Distributor ID is required<br/>";
             $('input[name=idistributor]').parent().parent('.form-group').addClass('has-error');
         }
-        if (!authForm.checkNotNullString(pw)) {
+        if (!helper.checkNotNullString(pw)) {
             isvalid = false;
             msg += "Password is required<br/>";
             $('input[name=ipassword]').parent().parent('.form-group').addClass('has-error');
@@ -191,35 +195,6 @@ let authForm = {
         authForm.showMessage();
     },
 
-    _apiKey: "_xak__",
-    ak: () => {
-        let c_apiKey = cookie.getCookie(authForm._apiKey);
-        console.log(c_apiKey);
-        cookie.DecodeString(c_apiKey);
-    },
-
-    _distID: "_xdi__",
-    di: () => {
-        let c_distID = cookie.getCookie(authForm._distID);
-        console.log(c_distID);
-        return cookie.DecodeString(c_distID);
-    },
-
-    _token: '_xtn__',
-    setToken: (token) => {
-        cookie.setCookie(authForm._token, token, cookie.addHours(cookie.today(), 12));
-    },
-    getToken: () => cookie.getCookie(authForm._token),
-    deleteToken: () => {
-        cookie.deleteCookie(authForm._token)
-    },
-
-    _lastActivePage: "_xap__",
-
-    _homePage: "https://ogacademy.staging.wpengine.com/",
-
-    _redirectActivePage: () => cookie.getCookie(authForm._lastActivePage),
-
     formSet: function() {
 
         $('body').find('button[type=button]').click(function() {
@@ -229,11 +204,18 @@ let authForm = {
             authForm.formReset();
         });
 
-        cookie.setCookie(authForm._apiKey, cookie.EncodeString("O3962162"), cookie.addHours(cookie.today(), 12));
-        cookie.setCookie(authForm._distID, cookie.EncodeString("1000101"), cookie.addHours(cookie.today(), 12));
-        //cookie.setCookie(authForm._lastActivePage, authForm._homePage, cookie.addHours(cookie.today(), 12));
+        $("input[name=idistributor]").keypress(function(e) {
+            authForm.enterEvent(e);
+        });
 
-        authForm.enterPressEvent();
+        $("input[name=ipassword]").keypress(function(e) {
+            authForm.enterEvent(e);
+        });
+
+        cookie.setCookie(constants.API_KEY, cookie.EncodeString("O3962162"), cookie.addHours(cookie.today(), 12));
+        cookie.setCookie(constants.DIST_ID, cookie.EncodeString("1000101"), cookie.addHours(cookie.today(), 12));
+        //cookie.setCookie(authForm._last_active_page, authForm._homePage, cookie.addHours(cookie.today(), 12));
+
         authForm.checkAuth();
     },
 
@@ -251,23 +233,6 @@ let authForm = {
         $('.loading-results').addClass("hide");
     },
 
-    checkNotNull: (data) => {
-        return Boolean(data !== undefined && data != null);
-    },
-
-    checkNotNullString: (str) => {
-        return authForm.checkNotNull(str) && Boolean(str.trim().length > 0);
-    },
-
-    enterPressEvent: () => {
-        $("input[name=idistributor]").keypress(function(e) {
-            authForm.enterEvent(e);
-        });
-
-        $("input[name=ipassword]").keypress(function(e) {
-            authForm.enterEvent(e);
-        });
-    },
     enterEvent: (e) => {
         let key = e.which;
         if (key == 13) // the enter key code
@@ -275,5 +240,25 @@ let authForm = {
             $('body').find('button[type=button]').click();
             return false;
         }
-    }
+    },
+
+    api_key: () => {
+        let c_apiKey = cookie.getCookie(constants.API_KEY);
+        return cookie.DecodeString(c_apiKey);
+    },
+
+    dist_id: () => {
+        let c_distID = cookie.getCookie(constants.DIST_ID);
+        return cookie.DecodeString(c_distID);
+    },
+
+    setToken: (token) => {
+        cookie.setCookie(constants.TOKEN, token, cookie.addDays(cookie.today(), 30));
+    },
+    getToken: () => cookie.getCookie(constants.TOKEN),
+    deleteToken: () => {
+        cookie.deleteCookie(constants.TOKEN)
+    },
+
+    redirectActivePage: () => cookie.getCookie(constants.LAST_ACTIVE_PAGE)
 };
