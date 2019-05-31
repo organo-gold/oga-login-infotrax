@@ -88,9 +88,6 @@ let authForm = {
                 done: function(response) {
                     console.log("done: ", response);
                 },
-                success: function(s) {
-                    console.log("success: ", s);
-                },
                 error: function(x, y) {
                     console.log("Error(x): ", x);
                     console.log("Error(y): ", y);
