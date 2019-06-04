@@ -82,14 +82,10 @@ let authForm = {
                     }
                     authForm.hideLoader();
                 },
-<<<<<<< HEAD
-                error: function(x, y, z) {
-=======
                 done: function(response) {
                     console.log("done: ", response);
                 },
                 error: function(x, y) {
->>>>>>> c8aa7ff637aaa2e00179cc6bfbe3c74232110b3c
                     console.log("Error(x): ", x);
                     console.log("Error(y): ", y);
                     if (helper.checkNotNull(x) && x.status === 401) {
@@ -140,9 +136,6 @@ let authForm = {
             //         },
             //         done: function(response) {
             //             console.log("done: ", response);
-            //         },
-            //         success: function(s) {
-            //             console.log("success: ", s);
             //         },
             //         error: function(x, y) {
             //             console.log("Error(x): ", x);
