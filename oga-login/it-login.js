@@ -54,16 +54,13 @@ let authForm = {
             let ak = authForm.api_key;
             let ds = $("input[name=idistributor]").val();
             let pw = $("input[name=ipassword]").val();
-            let url = constants.USER_AUTH_URL.replace("[ak]", ak).replace("[ds]", ds).replace("[pw]", pw);
+            //let url = constants.USER_AUTH_URL.replace("[ak]", ak).replace("[ds]", ds).replace("[pw]", pw);
+            let url = "http://api.oghq.ca/api/auth/post?username=" + ds + "&password=" + pw;
             console.log("auth_url: ", url);
-            jQuery.support.cors = true;
             $.ajax({
                 url: url,
                 type: "POST",
-                dataType: "application/json",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                dataType: "text",
                 success: function(response) {
                     console.log("response: ", response);
                     if (helper.checkNotNull(response)) {
@@ -85,13 +82,7 @@ let authForm = {
                     }
                     authForm.hideLoader();
                 },
-                done: function(response) {
-                    console.log("done: ", response);
-                },
-                success: function(s) {
-                    console.log("success: ", s);
-                },
-                error: function(x, y) {
+                error: function(x, y, z) {
                     console.log("Error(x): ", x);
                     console.log("Error(y): ", y);
                     if (helper.checkNotNull(x) && x.status === 401) {
@@ -100,19 +91,74 @@ let authForm = {
                         authForm.showMessage("Something went wrong. Unable to fetch data.");
                     }
                     authForm.hideLoader();
-                },
+                }
             });
+
+
+            // authForm.showLoader();
+            // if (authForm.validate()) {
+            //     let ak = authForm.api_key;
+            //     let ds = $("input[name=idistributor]").val();
+            //     let pw = $("input[name=ipassword]").val();
+            //     let url = constants.USER_AUTH_URL.replace("[ak]", ak).replace("[ds]", ds).replace("[pw]", pw);
+            //     console.log("auth_url: ", url);
+            //     jQuery.support.cors = true;
+            //     $.ajax({
+            //         url: url,
+            //         type: "POST",
+            //         dataType: "application/json",
+            //         headers: {
+            //             "Content-Type": "application/json"
+            //         },
+            //         success: function(response) {
+            //             console.log("response: ", response);
+            //             if (helper.checkNotNull(response)) {
+            //                 let stringified = JSON.stringify(response);
+            //                 let parsedObj = JSON.parse(stringified);
+            //                 if (helper.checkNotNullString(parsedObj.SESSION)) {
+            //                     authForm.setToken(parsedObj.SESSION);
+            //                     authForm.getUserByToken(parsedObj.SESSION, ak);
+            //                 } else {
+            //                     authForm.deleteToken();
+            //                     // { "MESSAGE": "Login Error", "DETAIL": "Invalid user", "TIMESTAMP": "05/27/2019 15:18:56", "ERRORCODE": "902" };
+            //                     if (helper.checkNotNull(parsedObj.DETAIL)) {
+            //                         authForm.showMessage(parsedObj.DETAIL);
+            //                     } else {
+            //                         authForm.showMessage("Authentication failed!");
+            //                     }
+            //                     return;
+            //                 }
+            //             }
+            //             authForm.hideLoader();
+            //         },
+            //         done: function(response) {
+            //             console.log("done: ", response);
+            //         },
+            //         success: function(s) {
+            //             console.log("success: ", s);
+            //         },
+            //         error: function(x, y) {
+            //             console.log("Error(x): ", x);
+            //             console.log("Error(y): ", y);
+            //             if (helper.checkNotNull(x) && x.status === 401) {
+            //                 authForm.showMessage("You are not authorized");
+            //             } else {
+            //                 authForm.showMessage("Something went wrong. Unable to fetch data.");
+            //             }
+            //             authForm.hideLoader();
+            //         },
+            //     });
         }
     },
 
     getUserByToken: function(token, ak) {
         console.log("token: ", token);
-        let url = constants.DETAIL_BY_TOKEN_URL.replace("[ak]", ak).replace("[di]", authForm.dist_id).replace("[token]", token);
+        let url = "http://api.oghq.ca/api/auth/postcheckuser?token=" + token;
         console.log("getUserByToken(): ", url);
-        jQuery.support.cors = true;
         $.ajax({
             url: url,
-            type: "GET",
+            type: "POST",
+            dataType: "text",
             success: function(response) {
                 console.log("response 2: ", response);
                 if (helper.checkNotNull(response)) {
@@ -132,6 +178,7 @@ let authForm = {
                         if (!helper.checkNotNullString(redirectPage)) {
                             redirectPage = constants.HOME_PAGE;
                         }
+                        console.log("redirectPage: ", redirectPage);
                         window.open(redirectPage, "_parent");
                     } else {
                         authForm.deleteToken();
@@ -156,6 +203,57 @@ let authForm = {
                 authForm.hideLoader();
             }
         });
+
+
+        // let url = constants.DETAIL_BY_TOKEN_URL.replace("[ak]", ak).replace("[di]", authForm.dist_id).replace("[token]", token);
+        // console.log("getUserByToken(): ", url);
+        // jQuery.support.cors = true;
+        // $.ajax({
+        //     url: url,
+        //     type: "GET",
+        //     success: function(response) {
+        //         console.log("response 2: ", response);
+        //         if (helper.checkNotNull(response)) {
+        //             let stringified = JSON.stringify(response);
+        //             let parsedObj = JSON.parse(stringified);
+        //             console.log("parsedObj.COLUMNS: ", parsedObj.COLUMNS);
+        //             if (helper.checkNotNull(parsedObj.COLUMNS)) {
+        //                 // CONTINUE
+        //                 console.log("VALIDATED");
+
+        //                 let redirectPage = helper.getQueryString(constants.CALLBACK);
+        //                 if (!helper.checkNotNullString(redirectPage)) {
+        //                     redirectPage = constants.HOME_PAGE;
+        //                 } else {
+        //                     redirectPage = authForm.redirectActivePage();
+        //                 }
+        //                 if (!helper.checkNotNullString(redirectPage)) {
+        //                     redirectPage = constants.HOME_PAGE;
+        //                 }
+        //                 window.open(redirectPage, "_parent");
+        //             } else {
+        //                 authForm.deleteToken();
+        //                 // {"MESSAGE":"Validation Error","DETAIL":"Not Authorized to run this service","TIMESTAMP":"05/27/2019 15:49:03","ERRORCODE":"904"}
+        //                 if (helper.checkNotNull(parsedObj.DETAIL)) {
+        //                     authForm.showMessage(parsedObj.DETAIL);
+        //                 } else {
+        //                     authForm.showMessage("Authentication failed!");
+        //                 }
+        //                 return;
+        //             }
+        //         }
+        //         authForm.hideLoader();
+        //     },
+        //     error: function(x, y, z) {
+        //         console.log("Error: ", x, y, z);
+        //         if (helper.checkNotNull(x) && x.status === 401) {
+        //             authForm.showMessage("You are not authorized");
+        //         } else {
+        //             authForm.showMessage("Something went wrong. Unable to fetch data.");
+        //         }
+        //         authForm.hideLoader();
+        //     }
+        // });
     },
 
     showMessage: function(text) {
