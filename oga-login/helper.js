@@ -3,7 +3,7 @@
 let helper = {
 
     checkNotNull: (data) => {
-        return Boolean(typeof data !== undefined && data != null);
+        return Boolean(data !== undefined && typeof data !== undefined && data != null);
     },
 
     checkNotNullString: (str) => {
@@ -38,4 +38,24 @@ let helper = {
     },
 
     logText: (logged) => Boolean(logged) ? constants.LOGOUT : constants.LOGIN,
+
+    api_key: () => {
+        let c_apiKey = cookie.getCookie(constants.API_KEY);
+        return cookie.DecodeString(c_apiKey);
+    },
+
+    dist_id: () => {
+        let c_distID = cookie.getCookie(constants.DIST_ID);
+        return cookie.DecodeString(c_distID);
+    },
+
+    setToken: (token) => {
+        cookie.setCookie(constants.TOKEN, token, cookie.addDays(cookie.today(), 30));
+    },
+    getToken: () => cookie.getCookie(constants.TOKEN),
+    deleteToken: () => {
+        cookie.deleteCookie(constants.TOKEN)
+    },
+
+    redirectActivePage: () => cookie.getCookie(constants.LAST_ACTIVE_PAGE)
 };

@@ -97,9 +97,50 @@ $(function() {
             }
 
             function checkUserValidation(isPage, pageUrl, _target) {
+                console.log("isPage:", isPage);
                 //checking if token has not been check before then fill below object
                 if (!helper.checkNotNull(auth_token)) {
                     auth_token = cookie.getCookie(constants.TOKEN);
+
+                    // Check user login status
+                    if (isPage === 0) {
+
+                        console.log("token: ", auth_token);
+                        let ak = helper.api_key;
+                        // let url = constants.DETAIL_BY_TOKEN_URL.replace("[ak]", ak).replace("[di]", helper.dist_id).replace("[token]", token);
+                        let url = constants.BASE_API_URL + "/api/auth/postcheckuser?token=" + auth_token;
+                        console.log("getUserByToken(): ", url);
+                        $.ajax({
+                            url: url,
+                            type: "POST",
+                            dataType: "json",
+                            success: function(response) {
+                                console.log("response 2: ", response);
+                                if (helper.checkNotNull(response)) {
+                                    let stringified = JSON.stringify(response);
+                                    let parsedObj = JSON.parse(stringified);
+                                    console.log("parsedObj.COLUMNS: ", parsedObj.COLUMNS);
+                                    if (!helper.checkNotNull(parsedObj.COLUMNS)) {
+                                        helper.deleteToken();
+                                        console.log("helper.getToken():", helper.getToken());
+                                        auth_token = "";
+                                        cookie.setCookie(constants.LAST_ACTIVE_PAGE, initial_url, cookie.addDays(cookie.today(), 30));
+                                        window.open(constants.OGA_LOGIN_PAGE, constants.PARENT);
+                                        return;
+                                    }
+                                }
+                            },
+                            error: function(x, y, z) {
+                                console.log("Error: ", x, y, z);
+                                if (helper.checkNotNull(x) && x.status === 401) {
+                                    console.log("You are not authorized");
+                                } else {
+                                    console.log("Something went wrong. Unable to fetch data.");
+                                }
+                            }
+                        });
+
+                    }
                 }
                 //saving clicked url in cookie and sending request to validate user
                 let initial_url = pageUrl;

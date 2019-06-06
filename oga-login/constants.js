@@ -24,8 +24,9 @@ const constants = {
     DIST_ID: "_xdi__",
     // "token id" cookie name
     TOKEN: "__utat_239FE8A9AT_F3F4",
-    HOME_PAGE: "https://ogacademy.staging.wpengine.com/",
+    HOME_PAGE: "https://ogacademystg.wpengine.com/",
     CALLBACK: "callback",
+    BASE_API_URL: "https://api.oghq.ca", //"https://localhost:44324", //
     USER_AUTH_URL: "http://organogold-dts.myvoffice.com/organogold/index.cfm?service=Session.login&apikey=[ak]&DTSPASSWORD=[pw]&DTSUSERID=[ds]&format=json",
     DETAIL_BY_TOKEN_URL: "http://organogold-dts.myvoffice.com/organogold/index.cfm?jsessionid=[token]&service=Genealogy.distInfoBySavedQuery&apikey=[ak]&QRYID=DistConfData&DISTID=[di]&APPNAME=Admin&GROUP=Reports&format=JSON&fwreturnlog=1"
 };
