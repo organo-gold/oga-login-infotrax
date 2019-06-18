@@ -16,7 +16,9 @@ const constants = {
     // constant value of
     TOP: "_top",
     // constant value of
-    OGA_LOGIN_PAGE: helper.getBaseUrl() + "/o-auth/?callback=" + window.location.href /*oga-login*/ ,
+    OGA_LOGIN_URL: "bo-login",
+    // constant value of
+    OGA_LOGIN_PAGE: helper.getBaseUrl() + "/bo-login/?callback=" + window.location.href /*oga-login*/ ,
     // constant value of
     LOGOUT: "LOG OUT",
     LOGIN: "LOG IN",

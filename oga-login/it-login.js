@@ -46,6 +46,7 @@ let authForm = {
             authForm.getUserByToken(token, helper.api_key);
         }
         authForm.hideLoader();
+        $('body').find('li.list-current-status').addClass("hide");
     },
 
     authenticate: function() {
@@ -55,7 +56,7 @@ let authForm = {
             let ds = $("input[name=idistributor]").val();
             let pw = $("input[name=ipassword]").val();
             //let url = constants.USER_AUTH_URL.replace("[ak]", ak).replace("[ds]", ds).replace("[pw]", pw);
-            let url = constants.BASE_API_URL + "/api/auth/post?username=" + ds + "&password=" + pw;
+            let url = constants.BASE_API_URL + "/api/auth/post?username=" + encodeURIComponent(ds) + "&password=" + encodeURIComponent(pw);
             console.log("auth_url: ", url);
             $.ajax({
                 url: url,
@@ -75,7 +76,8 @@ let authForm = {
                         if (helper.checkNotNullString(parsedObj.SESSION)) {
                             console.log("session:", "if");
                             helper.setToken(parsedObj.SESSION);
-                            authForm.getUserByToken(parsedObj.SESSION, ak);
+                            cookie.setCookie(constants.DIST_ID, cookie.EncodeString(ds), cookie.addDays(cookie.today(), 30));
+                            authForm.getUserByToken(parsedObj.SESSION);
                         } else {
                             console.log("session:", "else");
                             helper.deleteToken();
@@ -107,11 +109,12 @@ let authForm = {
         }
     },
 
-    getUserByToken: function(token, ak) {
+    getUserByToken: function(token) {
         console.log("token: ", token);
         let ak = helper.api_key;
+        let distID = helper.dist_id();
         // let url = constants.DETAIL_BY_TOKEN_URL.replace("[ak]", ak).replace("[di]", helper.dist_id).replace("[token]", token);
-        let url = constants.BASE_API_URL + "/api/auth/postcheckuser?token=" + token;
+        let url = constants.BASE_API_URL + "/api/auth/postcheckuser?token=" + encodeURIComponent(token) + "&distID=" + encodeURIComponent(distID);
         console.log("getUserByToken(): ", url);
         $.ajax({
             url: url,
@@ -127,17 +130,14 @@ let authForm = {
                         // CONTINUE
                         console.log("VALIDATED");
 
-                        let redirectPage = helper.getQueryString(constants.CALLBACK);
+                        let redirectPage = helper.redirectActivePage();
                         if (!helper.checkNotNullString(redirectPage)) {
-                            redirectPage = constants.HOME_PAGE;
-                        } else {
-                            redirectPage = helper.redirectActivePage();
+                            redirectPage = helper.getQueryString(constants.CALLBACK);
                         }
                         if (!helper.checkNotNullString(redirectPage)) {
                             redirectPage = constants.HOME_PAGE;
                         }
-                        console.log("redirectPage: ", redirectPage);
-                        window.open(redirectPage, "_parent");
+                        window.open(redirectPage, constants.PARENT);
                     } else {
                         helper.deleteToken();
                         // {"MESSAGE":"Validation Error","DETAIL":"Not Authorized to run this service","TIMESTAMP":"05/27/2019 15:49:03","ERRORCODE":"904"}
@@ -217,7 +217,6 @@ let authForm = {
         });
 
         cookie.setCookie(constants.API_KEY, cookie.EncodeString("O3962162"), cookie.addHours(cookie.today(), 12));
-        cookie.setCookie(constants.DIST_ID, cookie.EncodeString("1000101"), cookie.addHours(cookie.today(), 12));
 
         authForm.checkAuth();
     },

@@ -107,8 +107,10 @@ $(function() {
 
                         console.log("token: ", auth_token);
                         let ak = helper.api_key;
+                        let distID = helper.dist_id();
+                        console.log("distID,", distID);
                         // let url = constants.DETAIL_BY_TOKEN_URL.replace("[ak]", ak).replace("[di]", helper.dist_id).replace("[token]", token);
-                        let url = constants.BASE_API_URL + "/api/auth/postcheckuser?token=" + auth_token;
+                        let url = constants.BASE_API_URL + "/api/auth/postcheckuser?token=" + encodeURIComponent(auth_token) + "&distID=" + encodeURIComponent(distID);
                         console.log("getUserByToken(): ", url);
                         $.ajax({
                             url: url,
@@ -124,7 +126,8 @@ $(function() {
                                         helper.deleteToken();
                                         console.log("helper.getToken():", helper.getToken());
                                         auth_token = "";
-                                        cookie.setCookie(constants.LAST_ACTIVE_PAGE, initial_url, cookie.addDays(cookie.today(), 30));
+                                        if (!(window.location.href.indexOf(constants.OGA_LOGIN_URL) > -1))
+                                            cookie.setCookie(constants.LAST_ACTIVE_PAGE, initial_url, cookie.addDays(cookie.today(), 30));
                                         window.open(constants.OGA_LOGIN_PAGE, constants.PARENT);
                                         return;
                                     }
@@ -145,7 +148,8 @@ $(function() {
                 //saving clicked url in cookie and sending request to validate user
                 let initial_url = pageUrl;
                 if (!helper.checkNotNullString(auth_token)) {
-                    cookie.setCookie(constants.LAST_ACTIVE_PAGE, initial_url, cookie.addDays(cookie.today(), 30));
+                    if (!(window.location.href.indexOf(constants.OGA_LOGIN_URL) > -1))
+                        cookie.setCookie(constants.LAST_ACTIVE_PAGE, initial_url, cookie.addDays(cookie.today(), 30));
                     window.open(constants.OGA_LOGIN_PAGE, constants.PARENT);
                 } else if (isPage === 1) {
                     //
