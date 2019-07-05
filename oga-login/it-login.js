@@ -43,7 +43,7 @@ let authForm = {
         authForm.showLoader();
         let token = helper.getToken();
         if (helper.checkNotNull(token)) {
-            authForm.getUserByToken(token, helper.api_key);
+            authForm.getUserByToken(token);
         }
         authForm.hideLoader();
         $('body').find('li.list-current-status').addClass("hide");
@@ -52,11 +52,11 @@ let authForm = {
     authenticate: function() {
         authForm.showLoader();
         if (authForm.validate()) {
-            let ak = helper.api_key;
+            let ak = helper.api_key();
             let ds = $("input[name=idistributor]").val();
             let pw = $("input[name=ipassword]").val();
-            //let url = constants.USER_AUTH_URL.replace("[ak]", ak).replace("[ds]", ds).replace("[pw]", pw);
-            let url = constants.BASE_API_URL + "/api/auth/post?username=" + encodeURIComponent(ds) + "&password=" + encodeURIComponent(pw);
+            let url = constants.USER_AUTH_URL.replace("[ak]", ak).replace("[ds]", ds).replace("[pw]", pw);
+            //let url = constants.BASE_API_URL + "/api/auth/post?username=" + encodeURIComponent(ds) + "&password=" + encodeURIComponent(pw);
             console.log("auth_url: ", url);
             $.ajax({
                 url: url,
@@ -111,10 +111,12 @@ let authForm = {
 
     getUserByToken: function(token) {
         console.log("token: ", token);
-        let ak = helper.api_key;
+        let ak = helper.api_key();
         let distID = helper.dist_id();
-        // let url = constants.DETAIL_BY_TOKEN_URL.replace("[ak]", ak).replace("[di]", helper.dist_id).replace("[token]", token);
-        let url = constants.BASE_API_URL + "/api/auth/postcheckuser?token=" + encodeURIComponent(token) + "&distID=" + encodeURIComponent(distID);
+        console.log('ak:', ak);
+        console.log('distID:', distID);
+        let url = constants.DETAIL_BY_TOKEN_URL.replace("[ak]", encodeURIComponent(ak)).replace("[di]", encodeURIComponent(distID)).replace("[token]", encodeURIComponent(token));
+        //let url = constants.BASE_API_URL + "/api/auth/postcheckuser?token=" + encodeURIComponent(token) + "&distID=" + encodeURIComponent(distID);
         console.log("getUserByToken(): ", url);
         $.ajax({
             url: url,
@@ -217,7 +219,7 @@ let authForm = {
         });
 
         cookie.setCookie(constants.API_KEY, cookie.EncodeString("O3962162"), cookie.addHours(cookie.today(), 12));
-
+        //helper.deleteToken();
         authForm.checkAuth();
     },
 
